@@ -14,7 +14,7 @@ function ParticleCloud({ theme }) {
   
   const basePositions = useMemo(() => {
     const arr = new Float32Array(arraySize)
-    return random.inSphere(arr, { radius: 2.2 }) 
+    return random.inSphere(arr, { radius: 2.6 }) 
   }, [arraySize])
 
   const [currentPositions] = useState(() => {
@@ -30,15 +30,19 @@ function ParticleCloud({ theme }) {
   
   const colorArray = useMemo(() => {
     const arr = new Float32Array(arraySize)
-    const colorA = new THREE.Color(theme === 'dark' ? '#00f2fe' : '#1e3a8a')
-    const colorB = new THREE.Color(theme === 'dark' ? '#4facfe' : '#7e22ce')
-    const colorC = new THREE.Color(theme === 'dark' ? '#f093fb' : '#be185d')
+    
+    // EXACTLY 3 PASTEL COLORS: Pastel Green, Pastel Purple, and Pastel Dark Pink
+    const colorA = new THREE.Color(theme === 'dark' ? '#A7F3D0' : '#1e3a8a') // Soft Pastel Green
+    const colorB = new THREE.Color(theme === 'dark' ? '#DDD6FE' : '#7e22ce') // Soft Pastel Purple
+    const colorC = new THREE.Color(theme === 'dark' ? '#F472B6' : '#be185d') // Soft Pastel Dark Pink
 
     for(let i = 0; i < particleCount; i++) {
       const x = basePositions[i*3]
       const y = basePositions[i*3+1]
-      const mixX = (x + 2.2) / 4.4
-      const mixY = (y + 2.2) / 4.4
+      
+      const mixX = (x + 2.6) / 5.2
+      const mixY = (y + 2.6) / 5.2
+      
       const finalColor = colorA.clone().lerp(colorB, mixX).lerp(colorC, mixY)
 
       arr[i*3] = finalColor.r
@@ -78,10 +82,9 @@ function ParticleCloud({ theme }) {
     const introProgress = 1 - Math.pow(1 - introTimer.current, 3)
     const scrollVal = scrollProgress.current
 
-    // Home page rotation speed is untouched; reduced by 25% once scrolling past home
     const rotationDamp = scrollVal > 0.05 ? Math.max(0.15, 1 - (scrollVal * 0.85 * 0.75)) : 1
-    pointsRef.current.rotation.x -= (delta / 6) * rotationDamp 
-    pointsRef.current.rotation.y -= (delta / 8) * rotationDamp
+    pointsRef.current.rotation.x -= (delta / 20) * rotationDamp 
+    pointsRef.current.rotation.y -= (delta / 24) * rotationDamp
 
     mouseVec.set(state.pointer.x, state.pointer.y, 0.5)
     mouseVec.unproject(state.camera)
@@ -95,13 +98,11 @@ function ParticleCloud({ theme }) {
 
     for (let i = 0; i < arraySize; i += 3) {
       const introScale = 1 + (1 - introProgress) * 9 
-      
-      // REDUCED MOVEMENT SPEED BY 25%: Multiplied scroll influence by 0.75 for non-home sections
       const adjustedScroll = scrollVal * 0.75
       const spreadFactor = 1 + (adjustedScroll * 2.8)
 
-      const waveDeform = Math.sin(time * 0.8 + basePositions[i] * 3) * 0.12 
-      const noiseOffset = Math.sin(i + time * 0.3) * adjustedScroll * 0.4
+      const waveDeform = Math.sin(time * 0.4 + basePositions[i] * 3) * 0.06 
+      const noiseOffset = Math.sin(i + time * 0.2) * adjustedScroll * 0.2
 
       const targetBaseX = (basePositions[i] + waveDeform) * introScale * spreadFactor + noiseOffset
       const targetBaseY = (basePositions[i+1] + waveDeform) * introScale * spreadFactor + (adjustedScroll * 1.5)
@@ -116,23 +117,23 @@ function ParticleCloud({ theme }) {
       const dz = mouseWorldPos.z - targetBaseZ
       const dist = Math.sqrt(dx*dx + dy*dy + dz*dz)
 
-      const maxDist = 3.0 
+      const maxDist = 5.5 
 
       if (dist < maxDist && introTimer.current > 0.5) {
-        const force = Math.pow((maxDist - dist) / maxDist, 2)
-        const pullFactor = 2.31 
+        const force = Math.pow((maxDist - dist) / maxDist, 2.5)
+        const pullFactor = 3.2 
         
         const targetX = targetBaseX + dx * force * pullFactor
         const targetY = targetBaseY + dy * force * pullFactor
         const targetZ = targetBaseZ + dz * force * pullFactor
 
-        currX += (targetX - currX) * 0.08
-        currY += (targetY - currY) * 0.08
-        currZ += (targetZ - currZ) * 0.08
+        currX += (targetX - currX) * 0.025
+        currY += (targetY - currY) * 0.025
+        currZ += (targetZ - currZ) * 0.025
       } else {
-        currX += (targetBaseX - currX) * 0.05
-        currY += (targetBaseY - currY) * 0.05
-        currZ += (targetBaseZ - currZ) * 0.05
+        currX += (targetBaseX - currX) * 0.015
+        currY += (targetBaseY - currY) * 0.015
+        currZ += (targetBaseZ - currZ) * 0.015
       }
 
       positions[i] = currX
